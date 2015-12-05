@@ -9,10 +9,11 @@ $ webb.bin SOA redacted"
 <SEP>
 """
 
-DATA_FLAGS = ['?', '$', '!']
+DATA_FLAGS = ['?', '$', '!', '+']
 SEPCOUNTMAX = 1
 RESPONSE = 'r'
 ADDRESSLOOKUP = 'A'
+
 
 class DnsEdge():
     def __init__(self):
