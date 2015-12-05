@@ -58,11 +58,3 @@ def parse(infile, num_lines):
                     edgelist += [edge]
                 edge = DnsEdge()
     return edgelist
-
-
-infile = 'sampleoutput.txt'
-num_lines = 100
-edgelist = parse(infile, num_lines)
-print(edgelist[1].data)
-
-
