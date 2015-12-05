@@ -46,15 +46,32 @@ class DnsEdge():
                         self.valid = False
 
 
-def parse(infile, num_lines):
-    edgelist = []
-    with open(infile, "r") as f:
-        edge = DnsEdge()
-        for i in range(num_lines):
-            line = f.readline().rstrip()
-            edge.parse_line(line)
-            if edge.sepcount == SEPCOUNTMAX:
-                if edge.valid:
-                    edgelist += [edge]
-                edge = DnsEdge()
-    return edgelist
+def parse(infile, num_lines=None, num_edges=1000):
+    if num_lines:
+        edgelist = []
+        with open(infile, "r") as f:
+            edge = DnsEdge()
+            for i in range(num_lines):
+                line = f.readline().rstrip()
+                edge.parse_line(line)
+                if edge.sepcount == SEPCOUNTMAX:
+                    if edge.valid:
+                        edgelist += [edge]
+                    edge = DnsEdge()
+        return edgelist
+    else:
+        edgelist = []
+        edge_count = 0
+        with open(infile, "r") as f:
+            edge = DnsEdge()
+            for line in f:
+                if edge_count >= num_edges:
+                    break
+                line = line.rstrip()
+                edge.parse_line(line)
+                if edge.sepcount == SEPCOUNTMAX:
+                    if edge.valid:
+                        edgelist += [edge]
+                        edge_count += 1
+                    edge = DnsEdge()
+        return edgelist
