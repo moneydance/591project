@@ -1,5 +1,7 @@
 import networkx as nx
 from makegraph import parseToGraph
+import numpy as np
+import re
 
 def construct_graph(edges):
     G = nx.MultiGraph()
@@ -24,8 +26,36 @@ def print_edge_info(G, node_pairs):
             for thing in attributes['data']:
                 print("\t\t" + thing)
 
+#the [20::] can walys be changed to some other amount!
+def eigCent(G):
+    centrality = nx.eigenvector_centrality_numpy(G)
+    #print(['%s %0.2f'%(node,centrality[node]) for node in centrality])
+    return centrality[-20:]
+
+
+def degCent(G):
+    centrality = nx.degree_centrality(G)
+    #print(['%s %0.2f'%(node,centrality[node]) for node in centrality])
+    return centrality[:20]
+    
+def hubCent(G):
+    cent = nx.hits(G)
+    #cent[0] =  hubs; cent[1] = authorities
+    return cent[-20:]
+    
+
+def releventCenResults(dic1):            
+    dic2 = {key:dic1[key] for key in dic1 if not re.search(r'\d', key)}                
+    return dic2                
+
 # infile = 'makegraph/sampleoutput.txt'
 # num_lines = 100
 # edgelist = parseToGraph.parse(infile, num_lines)
 # G = construct_graph(edgelist)
 # print_edge_info(G, G.edges())
+
+
+
+
+
+
