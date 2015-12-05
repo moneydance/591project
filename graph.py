@@ -30,7 +30,7 @@ def print_edge_info(G, node_pairs):
 
 def eig_cent(G):
     centrality = nx.eigenvector_centrality_numpy(G)
-    centrality = relevant_cen_results(centrality)
+    return relevant_cen_results(centrality)
 
 
 def deg_cent(G):
@@ -39,7 +39,7 @@ def deg_cent(G):
 
 def hub_cent(G):
     centrality = nx.hits(G)
-    centrality = relevant_cen_results(centrality)
+    return relevant_cen_results(centrality)
 
 
 def relevant_cen_results(dic1):
