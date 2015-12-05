@@ -46,6 +46,37 @@ def relevant_cen_results(dic1):
     dic2 = {key:dic1[key] for key in dic1 if not re.search(r'[a-z]', key) is None}
     return dic2
 
+def sort_by_value(dic):
+    """
+    Returns a list of keys in dic sorted by their values, using a simple
+    variant of merge sort.
+    """
+    keys = list(dic.keys())
+    if len(dic) == 1:
+        return keys
+
+    k = len(keys)
+    left = keys[:k//2]
+    right = keys[k//2:]
+
+    left = sort_by_value({key: dic[key] for key in left})
+    right = sort_by_value({key: dic[key] for key in right})
+    return _merge(left, right, dic)
+
+
+def _merge(left, right, dic):
+    merged = []
+    i = 0
+    j = 0
+
+    while i < len(left) and j < len(right):
+        if dic[left[i]] <= dic[right[j]]:
+            merged.append(left[i])
+            i += 1
+        else:
+            merged.append(right[j])
+            j += 1
+    return merged + left[i:] if i < len(left) else merged + right[j:]
 
 # infile = '2013-03-17'
 # num_edges = 10
@@ -53,4 +84,5 @@ def relevant_cen_results(dic1):
 # G = construct_graph(edgelist)
 # print_edge_info(G, G.edges())
 # centrality = deg_cent(G)
-# print centrality
+# nodes = sort_by_value(centrality)[:10]
+# print nodes
