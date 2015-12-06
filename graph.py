@@ -87,7 +87,7 @@ def find_rare_destinations(G, num_nodes):
     return nodes
 
 
-def find_suspicious_edges_CNAME(G):
+def find_suspicious_edges_CNAME(G, num_occur=3):
     susp_edges = []
     for (n1,n2) in G.edges():
         edge_dict = G[n1][n2]
@@ -98,7 +98,7 @@ def find_suspicious_edges_CNAME(G):
             for thing in data:
                 if 'CNAME' in thing:
                     count += 1
-                    if count == 2:
+                    if count == num_occur:
                         susp_edges += [(n1,n2)]
                         susp = True
                         break
@@ -123,8 +123,21 @@ def interaction_trend(G, pair):
     print intervals
     return np.average(intervals), np.std(intervals)
 
+
+def connected_nodes(G, node, num_hops=1):
+    """
+    returns a list of nodes connected up to num_hops away from node.
+    """
+    nodes = [node]
+    for i in range(num_hops):
+        connected = []
+        for node in nodes:
+            connected += list(G[node].keys())
+        nodes += connected
+    return nodes
+
 # infile = '2013-03-17'
-# num_edges = 100000
+# num_edges = 10000
 # edgelist = parseToGraph.parse(infile, num_edges=num_edges)
 # G = construct_graph(edgelist)
 # edges = find_suspicious_edges_CNAME(G)
@@ -133,4 +146,6 @@ def interaction_trend(G, pair):
 #     print interaction_trend(G, edge)
 
 # print_edge_info(G, edges)
-# print find_rare_destinations(G, 10)
+# nodes = find_rare_destinations(G, 10)
+# nodes = connected_nodes(G, nodes[0])
+# print nodes
