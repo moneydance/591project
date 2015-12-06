@@ -2,6 +2,7 @@ import networkx as nx
 from makegraph import parseToGraph
 import numpy as np
 import re
+import datetime
 
 def construct_graph(edges):
     G = nx.MultiGraph()
@@ -78,30 +79,58 @@ def _merge(left, right, dic):
             j += 1
     return merged + left[i:] if i < len(left) else merged + right[j:]
 
+
+def find_rare_destinations(G, num_nodes):
+    centrality = deg_cent(G)
+    centrality = {key: centrality[key] for key in centrality if G.degree(key) > 3.0}
+    nodes = sort_by_value(centrality)[:num_nodes]
+    return nodes
+
+
+def find_suspicious_edges_CNAME(G):
+    susp_edges = []
+    for (n1,n2) in G.edges():
+        edge_dict = G[n1][n2]
+        for key in edge_dict:
+            data = edge_dict[key]['data']
+            susp = False
+            count = 0
+            for thing in data:
+                if 'CNAME' in thing:
+                    count += 1
+                    if count == 2:
+                        susp_edges += [(n1,n2)]
+                        susp = True
+                        break
+            if susp: break
+    return susp_edges
+
+
+def interaction_trend(G, pair):
+    """
+    Given G and a pair of nodes, looks at timestamps of edges and
+    returns average and st deviation of intervals between interactions.
+    """
+    n1, n2 = pair
+    edge_dict = G[n1][n2]
+    # need multiple exchanges for this function to work
+    assert len(list(edge_dict.keys())) > 1
+
+    dates = [edge_dict[key]['date'] for key in edge_dict]
+    dates = [datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S.%f") for date in dates]
+    dates = sorted(dates)
+    intervals = [(dates[i+1] - dates[i]).total_seconds() for i in range(len(dates)-1)]
+    print intervals
+    return np.average(intervals), np.std(intervals)
+
 # infile = '2013-03-17'
-# num_edges = 10000
+# num_edges = 100000
 # edgelist = parseToGraph.parse(infile, num_edges=num_edges)
 # G = construct_graph(edgelist)
-# print_edge_info(G, G.edges())
-# centrality = deg_cent(G)
-# centrality = {key: centrality[key] for key in centrality if G.degree(key) > 3.0}
-# nodes = sort_by_value(centrality)[:10]
-# print nodes
+# edges = find_suspicious_edges_CNAME(G)
+# edges = [edge for edge in edges if G.number_of_edges(edge[0], edge[1]) > 5]
+# for edge in edges:
+#     print interaction_trend(G, edge)
 
-# i = 0
-# susp_edges = []
-# for (n1,n2) in G.edges():
-#     if i == 10: break
-#     edge_dict = G[n1][n2]
-#     for key in edge_dict:
-#         data = edge_dict[key]['data']
-#         susp = False
-#         for thing in data:
-#             if 'CNAME' in thing:
-#                 susp_edges += [(n1,n2)]
-#                 susp = True
-#                 break
-#         if susp: break
-#     i += 1
-#
-# print_edge_info(G, susp_edges)
+# print_edge_info(G, edges)
+# print find_rare_destinations(G, 10)

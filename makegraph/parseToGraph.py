@@ -35,7 +35,7 @@ class DnsEdge():
                     if starting_char == '?':
                         components = line.split()
                         try:
-                            if components[2] == ADDRESSLOOKUP:
+                            if components[2] == ADDRESSLOOKUP and components[1]:
                                 self.external = components[1]
                             else:
                                 self.valid = False
@@ -43,10 +43,13 @@ class DnsEdge():
                             self.valid = False
                 else:
                     components = [x.strip() for x in line.split(',')]
-                    if components[5] == RESPONSE:
-                        self.date = components[0]
-                        self.internal = components[2]
-                    else:
+                    try:
+                        if components[5] == RESPONSE and components[0] and components[2]:
+                            self.date = components[0]
+                            self.internal = components[2]
+                        else:
+                            self.valid = False
+                    except IndexError:
                         self.valid = False
 
 
