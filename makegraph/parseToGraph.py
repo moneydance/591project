@@ -34,9 +34,12 @@ class DnsEdge():
                     self.data += [line]
                     if starting_char == '?':
                         components = line.split()
-                        if components[2] == ADDRESSLOOKUP:
-                            self.external = components[1]
-                        else:
+                        try:
+                            if components[2] == ADDRESSLOOKUP:
+                                self.external = components[1]
+                            else:
+                                self.valid = False
+                        except IndexError:
                             self.valid = False
                 else:
                     components = [x.strip() for x in line.split(',')]
@@ -56,7 +59,7 @@ def parse(infile, num_lines=None, num_edges=1000):
                 line = f.readline().rstrip()
                 edge.parse_line(line)
                 if edge.sepcount == SEPCOUNTMAX:
-                    if edge.valid:
+                    if edge.valid and edge.internal != None and edge.external != None:
                         edgelist += [edge]
                     edge = DnsEdge()
         return edgelist
@@ -71,7 +74,7 @@ def parse(infile, num_lines=None, num_edges=1000):
                 line = line.rstrip()
                 edge.parse_line(line)
                 if edge.sepcount == SEPCOUNTMAX:
-                    if edge.valid:
+                    if edge.valid and edge.internal != None and edge.external != None:
                         edgelist += [edge]
                         edge_count += 1
                     edge = DnsEdge()

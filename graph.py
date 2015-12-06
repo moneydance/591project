@@ -52,7 +52,7 @@ def sort_by_value(dic):
     variant of merge sort.
     """
     keys = list(dic.keys())
-    if len(dic) == 1:
+    if len(dic) <= 1:
         return keys
 
     k = len(keys)
@@ -79,11 +79,12 @@ def _merge(left, right, dic):
     return merged + left[i:] if i < len(left) else merged + right[j:]
 
 # infile = '2013-03-17'
-# num_edges = 1000
+# num_edges = 10000
 # edgelist = parseToGraph.parse(infile, num_edges=num_edges)
 # G = construct_graph(edgelist)
 # print_edge_info(G, G.edges())
 # centrality = deg_cent(G)
+# centrality = {key: centrality[key] for key in centrality if G.degree(key) > 3.0}
 # nodes = sort_by_value(centrality)[:10]
 # print nodes
 
