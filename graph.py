@@ -25,7 +25,7 @@ def print_edge_info(G, node_pairs):
             print "\tdata: "
             for thing in attributes['data']:
                 print "\t\t{}".format(thing)
-        print ''
+            print ''
 
 
 def eig_cent(G):
@@ -79,10 +79,28 @@ def _merge(left, right, dic):
     return merged + left[i:] if i < len(left) else merged + right[j:]
 
 # infile = '2013-03-17'
-# num_edges = 10
+# num_edges = 1000
 # edgelist = parseToGraph.parse(infile, num_edges=num_edges)
 # G = construct_graph(edgelist)
 # print_edge_info(G, G.edges())
 # centrality = deg_cent(G)
 # nodes = sort_by_value(centrality)[:10]
 # print nodes
+
+# i = 0
+# susp_edges = []
+# for (n1,n2) in G.edges():
+#     if i == 10: break
+#     edge_dict = G[n1][n2]
+#     for key in edge_dict:
+#         data = edge_dict[key]['data']
+#         susp = False
+#         for thing in data:
+#             if 'CNAME' in thing:
+#                 susp_edges += [(n1,n2)]
+#                 susp = True
+#                 break
+#         if susp: break
+#     i += 1
+#
+# print_edge_info(G, susp_edges)

@@ -4,6 +4,6 @@ def parse(infile, num_lines):
             print(f.readline())
 
 if __name__ == '__main__':
-    infile = input('name of file: ')
-    num_lines = int(input('number of lines to print: '))
+    infile = raw_input('name of file: ')
+    num_lines = int(raw_input('number of lines to print: '))
     parse(infile, num_lines)
