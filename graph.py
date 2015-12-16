@@ -87,9 +87,12 @@ def find_rare_destinations(G, num_nodes):
     return nodes
 
 
-def find_suspicious_edges_CNAME(G, num_occur=3):
+def find_suspicious_edges_CNAME(G, edges=None, num_occur=3):
     susp_edges = []
-    for (n1,n2) in G.edges():
+    if edges == None:
+        edges = G.edges()
+    edges = set(edges)       # ignore dups, since we will check all edges anyways
+    for (n1,n2) in edges:
         edge_dict = G[n1][n2]
         for key in edge_dict:
             data = edge_dict[key]['data']
@@ -137,7 +140,7 @@ def connected_nodes(G, node, num_hops=1):
     return nodes
 
 
-def belief_propagation(G, hosts, doms, threshold=0.7):
+def belief_propagation(G, hosts, doms, threshold=0.5):
     """
     find new suspicious hosts/domains given sets of seed domains and hosts.
     """
@@ -158,7 +161,7 @@ def belief_propagation(G, hosts, doms, threshold=0.7):
             for dom in raredoms:
                 if dom in doms:
                     continue
-                score[dom] = compute_score(G, dom)
+                score[dom] = compute_score(G, dom, hosts)
             # get domain of max score
             max_dom = reduce(lambda x,y: x if score[x] >= score[y] else y, score)
             if score[max_dom] >= threshold:
@@ -171,28 +174,55 @@ def belief_propagation(G, hosts, doms, threshold=0.7):
             raredoms |= set.union({set(rare_domains(G,host)) for host in hosts})
 
 
-def rare_domains(G, host):
+def rare_domains(G, host, lo=5, hi=15):
     """
     return list of rare domains adjacent to host in G.
+    for the simple graph equivalent of G, consider rare if degree is between lo and hi.
     """
+    S = nx.Graph(G)      # reduce to simple Graph
+    raredoms = []
+    for domain in list(G[host].keys()):
+        if S.degree(domain) > lo and S.degree(domain) < hi:
+            raredoms += [domain]
+    return raredoms
 
 
 def detect(G, domain):
     """
     return True if we detect suspicious activity from this domain.
     """
+    return len(find_suspicious_edges_CNAME(G, edges=G.edges(domain))) >= 1
 
 
-def compute_score(G, domain):
+def compute_score(G, domain, mal_hosts):
     """
     the higher the score, the more suspicious. normalize to be in range [0,1].
     """
+    count = 0
+    averages = []
+    for host in G[domain]:
+        count += 1
+        avg, sv = interaction_trend(G, (domain, host))
+
+        averages.append(avg)
+        if sv < 10:
+            count += 1
+
+    # ratio of hosts with reasonably low stds
+    score = count/len(G[domain])
+    # 1 if overall std of interval averages is relatively low
+    score += 1 if np.std(averages) < 10 else 0
+    # ratio of hosts connected to domain that we know are infected.
+    score += len([host for host in G[domain] if host in mal_hosts])/len(G[domain])
+    return score/3
 
 
 def hosts(G, domain):
     """
     return list of hosts adjacent to domain in G.
     """
+    # G is bipartite, so every node adjacent to a domain should be a host.
+    return list(G[domain].keys())
 
 
 infile = '2013-03-17'
