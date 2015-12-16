@@ -136,16 +136,75 @@ def connected_nodes(G, node, num_hops=1):
         nodes += connected
     return nodes
 
-# infile = '2013-03-17'
-# num_edges = 10000
-# edgelist = parseToGraph.parse(infile, num_edges=num_edges)
-# G = construct_graph(edgelist)
-# edges = find_suspicious_edges_CNAME(G)
-# edges = [edge for edge in edges if G.number_of_edges(edge[0], edge[1]) > 5]
+
+def belief_propagation(G, hosts, doms, threshold=0.7):
+    """
+    find new suspicious hosts/domains given sets of seed domains and hosts.
+    """
+    assert type(hosts) == type(doms) == set
+    raredoms = set.union({set(rare_domains(G, host)) for host in hosts})
+    # what should our stop condition be?
+    while True:
+        newdoms = set()
+        for dom in raredoms:
+            if dom in doms:
+                continue
+            if detect(G, dom):
+                newdoms |= {dom}
+                raredoms -= {dom}
+
+        if not newdoms:
+            score = {}  # dict, not set
+            for dom in raredoms:
+                if dom in doms:
+                    continue
+                score[dom] = compute_score(G, dom)
+            # get domain of max score
+            max_dom = reduce(lambda x,y: x if score[x] >= score[y] else y, score)
+            if score[max_dom] >= threshold:
+                N |= {dom}
+            else:
+                break
+        else:
+            doms |= newdoms
+            hosts |= set.union({set(hosts(G,dom)) for dom in newdoms})
+            raredoms |= set.union({set(rare_domains(G,host)) for host in hosts})
+
+
+def rare_domains(G, host):
+    """
+    return list of rare domains adjacent to host in G.
+    """
+
+
+def detect(G, domain):
+    """
+    return True if we detect suspicious activity from this domain.
+    """
+
+
+def compute_score(G, domain):
+    """
+    the higher the score, the more suspicious. normalize to be in range [0,1].
+    """
+
+
+def hosts(G, domain):
+    """
+    return list of hosts adjacent to domain in G.
+    """
+
+
+infile = '2013-03-17'
+num_edges = 10000
+edgelist = parseToGraph.parse(infile, num_edges=num_edges)
+G = construct_graph(edgelist)
+edges = find_suspicious_edges_CNAME(G)
+edges = [edge for edge in edges if G.number_of_edges(edge[0], edge[1]) < 2]
 # for edge in edges:
 #     print interaction_trend(G, edge)
 
-# print_edge_info(G, edges)
+print_edge_info(G, edges)
 # nodes = find_rare_destinations(G, 10)
 # nodes = connected_nodes(G, nodes[0])
 # print nodes
