@@ -139,7 +139,7 @@ def connected_nodes(G, node, num_hops=1):
     return nodes
 
 
-def belief_propagation(G, hosts, doms, threshold=0.5):
+def belief_propagation(G, hosts, doms, threshold=0.5, max_iter=100):
     """
     find new suspicious hosts/domains given sets of seed domains and hosts.
     """
@@ -156,11 +156,14 @@ def belief_propagation(G, hosts, doms, threshold=0.5):
         for dom in doms: hosts |= get_hosts(G,dom)
     raredoms = set()
     for host in hosts: raredoms |= rare_domains(G, host)
-    # what should our stop condition be?
+
     count = 0
-    while True:
+    while len(raredoms) > 0:
         count += 1
-        if count > 50: break       # umm
+        if count > max_iter:
+            print 'max_iter reached! breaking...'
+            break
+
         newdoms = set()
         remove = set()
         for dom in raredoms:
@@ -231,7 +234,7 @@ def compute_score(G, domain, mal_hosts):
     # ratio of hosts with reasonably low stds
     score = 0 if total == 0 else count/total
     # 1 if overall std of interval averages is relatively low
-    score += 1 if np.std(averages) < 10 else 0
+    score += 0 if len(averages) < 3 or np.std(averages) > 10 else 1
     # ratio of hosts connected to domain that we know are infected.
     score += len([host for host in G[domain] if host in mal_hosts])/len(G[domain])
     return score/3
@@ -246,15 +249,21 @@ def get_hosts(G, domain):
 
 
 infile = '2013-03-17'
-num_edges = 100000
+num_edges = 500000
 edgelist = parseToGraph.parse(infile, num_edges=num_edges)
 G = construct_graph(edgelist)
 hosts, doms = belief_propagation(G, set(), set())
+print
 for host in hosts:
     print host
 print
 for dom in doms:
     print dom
+print
+
+for host in hosts:
+    pairs = [(host, dom) for dom in G[host] if dom in doms]
+    print_edge_info(G, pairs)
 
 # edges = find_suspicious_edges_CNAME(G)
 # edges = [edge for edge in edges if G.number_of_edges(edge[0], edge[1]) < 2]
