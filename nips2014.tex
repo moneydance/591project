@@ -9,20 +9,12 @@
 
 %% Not sure why this is not working!?
 \author{
-Tim  Lim\\
-Department of Computer Science \\
-Address1 \\
-\texttt{email3} \\
-\AND
+Tim  Lim\\\and
 Dan Brown \\
-Department of Computer Science \\
-Address2 \\
-\texttt{dmbrown@bu.edu} \\
-\AND
+\and
 Ben Pusey \\
-Department of Computer Science \\
-Address3 \\
-\texttt{email2} \\
+\AND
+https://github.com/moneydance/591project
 }
 
 % The \author macro works with any number of authors. There are two commands
@@ -36,7 +28,7 @@ Address3 \\
 \newcommand{\fix}{\marginpar{FIX}}
 \newcommand{\new}{\marginpar{NEW}}
 
-%\nipsfinalcopy % Uncomment for camera-ready version
+\nipsfinalcopy % Uncomment for camera-ready version
 
 \begin{document}
 
@@ -44,22 +36,14 @@ Address3 \\
 \maketitle
 
 \begin{abstract}
-Detecting Malware in the form of infected hosts and domains inside of a network 
-is no easy task, especially if all one has to work with are log files that comprise 
-a few months of data and total over 1 Terabyte worth of space. In this paper, we discuss
-the method we used in accomplishing this goal.
+Advanced persistent threats have become a major concern for IT professional around the world. Their stealthy distributed nature makes them difficult 
+to identify and remove. However because the connections between backdoors and command and control centers are bipartite, certain graph theory
+techniques can be used to identify malicious domains, and infected hosts
 \end{abstract}
 
 \section{Introduction}
-Insert intro for detecting malicious hosts/domains...
-
-\subsection{Method Explanations}
-Explanation of methods...
-
-\subsection{Contributions}
-Contributions (if any)...
- 
-
+Cyber security is an ever-changing field. As malware becomes more advance so do methods of detection. Recently a sophisticated attack called and Advanced Persistent Threat (APT) has emerged. These 
+
 %% \subsection{Keywords for paper submission}
 %% Your NIPS paper can be submitted with any of the following keywords (more than one keyword is possible for each paper):
 
@@ -75,7 +59,7 @@ Contributions (if any)...
 %% \end{verbatim}
 
 
-\section{Our Method}
+\section{Methodology}
 \label{method}
 
 The entirety of the data is stored in the form of DNS logs. In terms of a broad overview, our methodology is simply the following: parse the logs, filter the parse result, build a graph, analyze that graph, get a set of domains,
@@ -88,7 +72,7 @@ Once our final graph has been constructed from all the responses found in the lo
 are connected to (or have contacted) each of the domains. We then look at which of these domains have a low-degree centrality (small amount of connections), then use those domains to aid in the execution of a Belief Propagation algorithm. \\
 Once the Belief Propagation finishes, it will return a sub-network of possibly infected hosts and domains. We can then look into those possibly infected nodes, and check for suspicious activity. 
 
-\subsection{Low Degree Centrality}
+\subsection{Rare Domains}
 Many infected domains tend to be ones that are specifically targeted by malicious hosts. These domains are specifically chosen by malicious hosts because they tend to be ones that have a small amount connections. \\
 A small amount of connections means a small amount of requests are processed by the domain, which potentially means less security, less tracking of hosts and their interactions with the domain, and an overall 
 less chance of the malicious hosts being discovered and dealt with for committing malicious actions. Because of this type of low-detection chance environment, domains with low connections could serve as a front 
@@ -100,9 +84,9 @@ Now, since this bound can potentially return a large portion of the graph, we th
 combined with the results of the BP algorithm, then filtered and returned as the final sub-network of possibly infected hosts and domains. 
 
 \subsection{Belief Propagation}
-We use the Belief Propagation algorithm to return a greater and somewhat more accurate set of possible C\&C nodes, which otherwise, would be hard or take a long time to find by investigating nodes with the use of other methods. 
-The premise of the BP algorithm is simple: imagine we have a set of nodes. All those nodes have a label, and each node's neighbour has an idea of the possibility of its neighbouring nodes having a certain label or message. Based on this 
-possibility, a similarity score is assigned to each node. In the case of networks and malicious behaviour, we can think of that message as Malware, and when this algorithm is done running, it returns a score that shows the influence one 
+We use the Belief Propagation algorithm to return a greater and somewhat more accurate set of possible C\&C nodes.
+The premise of the BP algorithm is simple: imagine we have a set of nodes. All those nodes have a label, and each node's neighbor has an idea of the possibility of its neighboring nodes having a certain label or message. Based on this 
+possibility, a similarity score is assigned to each node. In the case of networks and malicious behavior, we can think of that message as Malware, and when this algorithm is done running, it returns a score that shows the influence one 
 node might have over other nodes, which potentially represents malicious hosts that have an influence on infected domains as well as other infected hosts (possible C\&C pairs). \\
 The main advantage of this algorithm is that we allow the network itself to find some of the possible C\&C pairs, which is much more efficient and more accurate than using other means to achieve the same result. And that result will be in
 the form of nodes which have a high score according to the BP algorithm. These nodes are then combined with the nodes from the previous centrality algorithm (duplicates removed), and are then filtered by checking for malicious activity.
