@@ -123,7 +123,6 @@ def interaction_trend(G, pair):
     dates = [datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S.%f") for date in dates]
     dates = sorted(dates)
     intervals = [(dates[i+1] - dates[i]).total_seconds() for i in range(len(dates)-1)]
-    print intervals
     return np.average(intervals), np.std(intervals)
 
 
@@ -145,16 +144,32 @@ def belief_propagation(G, hosts, doms, threshold=0.5):
     find new suspicious hosts/domains given sets of seed domains and hosts.
     """
     assert type(hosts) == type(doms) == set
-    raredoms = set.union({set(rare_domains(G, host)) for host in hosts})
+    if not hosts:
+        lo = 5
+        hi = 15           # arbitrary
+        for node in G:
+            if len(doms) > 20: break
+            if re.search(r'[a-z]', node) is None: continue
+            if G.degree(node) > lo and G.degree(node) < hi and detect(G, node):
+                doms |= {node}
+
+        for dom in doms: hosts |= get_hosts(G,dom)
+    raredoms = set()
+    for host in hosts: raredoms |= rare_domains(G, host)
     # what should our stop condition be?
+    count = 0
     while True:
+        count += 1
+        if count > 50: break       # umm
         newdoms = set()
+        remove = set()
         for dom in raredoms:
             if dom in doms:
                 continue
             if detect(G, dom):
                 newdoms |= {dom}
-                raredoms -= {dom}
+                remove |= {dom}
+        raredoms -= remove
 
         if not newdoms:
             score = {}  # dict, not set
@@ -163,27 +178,29 @@ def belief_propagation(G, hosts, doms, threshold=0.5):
                     continue
                 score[dom] = compute_score(G, dom, hosts)
             # get domain of max score
+            if score == {}: break
             max_dom = reduce(lambda x,y: x if score[x] >= score[y] else y, score)
             if score[max_dom] >= threshold:
-                N |= {dom}
+                newdoms |= {dom}
             else:
                 break
         else:
             doms |= newdoms
-            hosts |= set.union({set(hosts(G,dom)) for dom in newdoms})
-            raredoms |= set.union({set(rare_domains(G,host)) for host in hosts})
+            for dom in newdoms: hosts |= get_hosts(G,dom)
+            for host in hosts: raredoms |= rare_domains(G,host)
+    return hosts, doms
 
 
 def rare_domains(G, host, lo=5, hi=15):
     """
-    return list of rare domains adjacent to host in G.
+    return set of rare domains adjacent to host in G.
     for the simple graph equivalent of G, consider rare if degree is between lo and hi.
     """
     S = nx.Graph(G)      # reduce to simple Graph
-    raredoms = []
+    raredoms = set()
     for domain in list(G[host].keys()):
         if S.degree(domain) > lo and S.degree(domain) < hi:
-            raredoms += [domain]
+            raredoms |= {domain}
     return raredoms
 
 
@@ -200,16 +217,19 @@ def compute_score(G, domain, mal_hosts):
     """
     count = 0
     averages = []
+    total = len(G[domain])
     for host in G[domain]:
-        count += 1
-        avg, sv = interaction_trend(G, (domain, host))
-
-        averages.append(avg)
-        if sv < 10:
-            count += 1
+        try:
+            avg, sv = interaction_trend(G, (domain, host))
+            averages.append(avg)
+            if sv < 10:
+                count += 1
+        except AssertionError:
+            total -= 1
+            continue
 
     # ratio of hosts with reasonably low stds
-    score = count/len(G[domain])
+    score = 0 if total == 0 else count/total
     # 1 if overall std of interval averages is relatively low
     score += 1 if np.std(averages) < 10 else 0
     # ratio of hosts connected to domain that we know are infected.
@@ -217,24 +237,30 @@ def compute_score(G, domain, mal_hosts):
     return score/3
 
 
-def hosts(G, domain):
+def get_hosts(G, domain):
     """
-    return list of hosts adjacent to domain in G.
+    return set of hosts adjacent to domain in G.
     """
     # G is bipartite, so every node adjacent to a domain should be a host.
-    return list(G[domain].keys())
+    return set(G[domain].keys())
 
 
 infile = '2013-03-17'
-num_edges = 10000
+num_edges = 100000
 edgelist = parseToGraph.parse(infile, num_edges=num_edges)
 G = construct_graph(edgelist)
-edges = find_suspicious_edges_CNAME(G)
-edges = [edge for edge in edges if G.number_of_edges(edge[0], edge[1]) < 2]
+hosts, doms = belief_propagation(G, set(), set())
+for host in hosts:
+    print host
+print
+for dom in doms:
+    print dom
+
+# edges = find_suspicious_edges_CNAME(G)
+# edges = [edge for edge in edges if G.number_of_edges(edge[0], edge[1]) < 2]
 # for edge in edges:
 #     print interaction_trend(G, edge)
 
-print_edge_info(G, edges)
 # nodes = find_rare_destinations(G, 10)
 # nodes = connected_nodes(G, nodes[0])
 # print nodes
