@@ -186,11 +186,13 @@ def belief_propagation(G, hosts, doms, threshold=0.5, max_iter=100):
             if score[max_dom] >= threshold:
                 newdoms |= {dom}
             else:
+                print 'no domain with score above threshold! breaking.. \n'
                 break
         else:
             doms |= newdoms
             for dom in newdoms: hosts |= get_hosts(G,dom)
             for host in hosts: raredoms |= rare_domains(G,host)
+    if len(raredoms) == 0 : print "broke because no more rare domains! \n"
     return hosts, doms
 
 
@@ -228,13 +230,12 @@ def compute_score(G, domain, mal_hosts):
             if sv < 10:
                 count += 1
         except AssertionError:
-            total -= 1
             continue
 
     # ratio of hosts with reasonably low stds
     score = 0 if total == 0 else count/total
     # 1 if overall std of interval averages is relatively low
-    score += 0 if len(averages) < 3 or np.std(averages) > 10 else 1
+    score += 0 if len(averages) < 3 or np.std(averages) > 20 else 1
     # ratio of hosts connected to domain that we know are infected.
     score += len([host for host in G[domain] if host in mal_hosts])/len(G[domain])
     return score/3
@@ -252,7 +253,7 @@ infile = '2013-03-17'
 num_edges = 500000
 edgelist = parseToGraph.parse(infile, num_edges=num_edges)
 G = construct_graph(edgelist)
-hosts, doms = belief_propagation(G, set(), set())
+hosts, doms = belief_propagation(G, set(), set(), threshold=0.7)
 print
 for host in hosts:
     print host
