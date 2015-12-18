@@ -8,7 +8,6 @@
 
 \title{Detecting Infected Hosts and Domains}
 
-%% Not sure why this is not working!?
 \author{
 Tim  Lim\\
 \and
@@ -39,14 +38,16 @@ https://github.com/moneydance/591project
 
 
 \begin{abstract}
-Advanced persistent threats have become a major concern for IT professional around the world. Their stealthy distributed nature makes them difficult 
-to identify and remove. However because the connections between backdoors and command and control centers leave tell tale traces in DNS data, certain graph theory
+Advanced persistent threats have become a major concern for IT professionals around the world. Their stealthy distributed nature makes them difficult 
+to identify and remove. However because the connections between backdoors and command and control centers leave telltale traces in DNS data, certain graph theory
 techniques can be used to identify malicious domains, and infected hosts.
 \end{abstract}
 
 \section{Introduction}
 Cyber security is an ever-changing field. As malware becomes more advanced so do methods of detection. Recently a sophisticated attack called an Advanced Persistent Threat (APT) has emerged. This stealthy form of malware attempts to blend in to the normal operations of the target organization. Fortunately due to the communication and infection vectors employed by APTs,  tell tale patterns are left in an organization's DNS logs. In our implementation we leverage these communication patterns to detect suspicious activity that potentially indicates an APT infection.
-
+
+
+
 %% \subsection{Keywords for paper submission}
 %% Your NIPS paper can be submitted with any of the following keywords (more than one keyword is possible for each paper):
 
@@ -96,21 +97,13 @@ Malicious domains are contacted by a small subset of infected hosts. Because of 
 \subsection{Belief Propagation}
 We can use a belief propagation algorithm on a seed of malicious hosts and domains to iteratively grow our subgraph of infected hosts and know C\&C domains. We do this by first looking at all the rare domains contacted by our infected seed hosts. If these domains exhibit malicious C\&C like behavior we add them to a list of new malicious domains. If we have not detected any new malicious domains we begin belief propagation. We assign rare domains a score based on their properties being similar to known C\&C domains. If this score is above a certain threshold we add the domain to our list of new malicious domains. After these two steps we update our known malicious domains with the newly found ones. We then update our malicious hosts with the hosts that contacted these new malicious domains, and update the rare domains we were looking at with the rare domains contacted by these new malicious hosts. We continue to do this until a certain number of C\&C domains and malicious hosts are detected.
 
-\section{Experiments}
-\label{exp}
-Due to the sheer size of the data itself, running, let alone reading, all of it would require access to computers or large amounts of time that we simply did not possess. For this reason, it is a more suitable approach to 
-look at a smaller amount of time, for example - a day's worth of data, instead of all the data that comprises several months of network information. Even just one day of data could contain a large amount of infected domains 
-and hosts, and would pose quite a challenge in order to find those that may or may not be infected.
-
-\subsection{A day's worth of data}
-Many malicious hubs, malicious hosts, infected domains, and other infected hosts can appear within the time-frame of a day. Domains that were completely fine one day, can become infected on the next. So it is not unreasonable to test
-and do experiments involving just one day's worth of DNS log data. And in fact, looking at one day might be more beneficial than looking at an entire month, especially if later experiments also focus on just a day of data but later on 
-in that month. \\
-This could potentially form a basis for creating a more in-depth, focused, and localized area of interest within the possible infected sub-network(s) of the entire network, which could be more useful than a broad analysis
-involving an entire month of data.
 
 \section{Results}
 \label{res}
+Due to the sheer size of the data itself, our experiments were focused on just a single day's worth of DNS logs, from which we could potentially iterate on and refine our methods.
+
+This could potentially form a basis for creating a more in-depth, focused, and localized area of interest within the possible infected sub-network(s) of the entire network, which could be more useful than a broad analysis
+involving an entire month of data.
 
 We run our code with the following settings, and output the sets of domains and hosts we find, as well as edge information between them, to a log file:
 \begin{lstlisting}
@@ -356,9 +349,12 @@ data:
 ! marathon.racier.wad.wryness.noe CNAME moody.g.eyeballing.noe
 ! moody.g.eyeballing.noe A 59.195.249.218
 \end{verbatim}
+
+As you can see, the interactions between this host and domain occurred extremely regularly (At 5-minute intervals) and always involved multiple CNAME responses.  Our Belief Propagation algorithm was also able to find a sizable list of domains and hosts that we can further inspect, and observe over a longer time period.
+
 \section{Conclusion}
 \label{conclusion}
-In conclusion our methodology seems to be correct as a proof of concept. However for real world applications our system must be made more robust by being able to handle months of data instead of just a day. To do this we would have to build a software stack involving databases to filter out the normal DNS traffic of a company and find rarely contacted domains. Our methods for finding C\&C domains could also be improved by expanding the parameters we are using to define suspicious activity and using more than the standard deviation of communication intervals between hosts and domains to identify automated domains.
+In conclusion our methodology seems to be correct as a proof of concept. However for real world applications our system must be made more robust by being able to handle months of data instead of just a day. To do this we would have to build a software stack involving databases to filter out the normal DNS traffic of a company and find rarely contacted domains. Our methods for finding C\&C domains could also be improved by expanding the parameters we are using to define suspicious activity and using more sophisticated metrics and methods than, for example, just the standard deviation of communication intervals between hosts and domains to identify automated domains.
 
 
 \subsubsection*{References}
@@ -366,7 +362,8 @@ In conclusion our methodology seems to be correct as a proof of concept. However
 \small{
 [1] K. M. Carter, N. Idika, and W. W. Streilein. Probabilistic threat propagation for network security. IEEE Transactions on Information Forensics and Security, 9, 2014.
 
-[2] T.-F. Yen and M. K. Reiter. Traffic aggregation for malware detection. InProc. Intl. Conf. Detection of Intrusions and Malware, and Vulnerability Assessment, DIMVA, 2008.
+[2] T.-F. Yen and M. K. Reiter. Traffic aggregation for malware detection. In
+Proc. Intl. Conf. Detection of Intrusions and Malware, and Vulnerability Assessment, DIMVA, 2008.
 
 [3] Alina Oprea, Zhou Li, Ting-Fang Yen, Sang H. Chin and Sumayah Alrwais. Detection of Early-Stage Enterprise Infection by Mining Large-Scale Log Data
 }
